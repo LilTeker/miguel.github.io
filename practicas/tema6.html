@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Subida de nota en Redes">
+    <title>Tema 6 - Servicios Web</title>
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/estilo.css">
+    <link href="cover.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="site-wrapper">
+      <div class="site-wrapper-inner">
+        <div class="container">
+          <header>
+            <h1>Servicios Web</h1>
+          </header>
+          <article>
+            <p>Creo el contenedor de ubuntu (aqui tendria que quitar el "-p 8080:80,
+                pero al volver a hacerlo varias veces se me olvido volver a 
+                tomar la captura)
+            </p>
+            <img src="../capturas/Servidor web/1.png">
+            <p>Aqui entro en la linea de comandos del contenedor ubuntu</p>
+            <img src="../capturas/Servidor web/2.png">
+            <p>Hago un apt update, instalo apache2 y arranco el servicio,
+                aqui compruebo en el host que el puerto esta abierto y puedo
+                acceder al contenedor
+            </p>
+            <img src="../capturas/Servidor web/3.png">
+            <p>Compruebo que el servidor apache funciona</p>
+            <img src="../capturas/Servidor web/4.png">
+            <h3>VirtualHosts</h3>
+            <p>Añado los nombres que le vamos a dar a los virtualhosts que vamos a crear</p>
+            <img src="../capturas/Servidor web/5.png">
+            <p>En el archivo 000-default.conf ponemos el primer host, el principal,
+                copiamos el archivo y lo renombramos con el nombre que queremos que tenga
+                el segundo host, en mi caso 001-virtualrobles.conf y cambiamos 
+                ServerName y ServerAdmin por los valores correspondientes.
+            </p>
+            <img src="../capturas/Servidor web/6.png">
+            <p>Dentro de /var/www creamos la carpeta del segundo host</p>
+            <img src="../capturas/Servidor web/7.png">
+            <p>Con el comando a2ensite activamos el nuevo host, tras eso reiniciamos apache2</p>
+            <img src="../capturas/Servidor web/8.png">
+            <p>Aqui podemos ver los dos hosts funcionando correctamente</p>
+            <img src="../capturas/Servidor web/9.png">
+            <h3>Autenticación Digest</h3>
+            <p>Para activarla usamos "a2enmod auth_digest" dento de /etc/apache2/mods-enabled y reiniciamos apache</p>
+            <img src="../capturas/Servidor web/10.png">
+            <p>Con "htdigest -c" creamos el archvo digest en la carpeta /var/www/ con mi nombre y mi contraseña</p>
+            <img src="../capturas/Servidor web/11.png">
+            <p>Añadimos una carpeta dentro del segundo virtualhost y añadimos el contenido
+                web que queramos
+            </p>
+            <img src="../capturas/Servidor web/12.png">
+            <p>Al final del archivo de configuracion del virtualhost donde hayamos
+                metido la carpeta anterior debemos colocar el codigo que se ve
+                en la imagen cambiando los datos que sean necesarios
+            </p>
+            <img src="../capturas/Servidor web/13.png">
+            <p>Como vemos nos pide autenticacion para entrar al sitio</p>
+            <img src="../capturas/Servidor web/14.png">
+            <p>Aqui vemos el html de la zona prohibida</p>
+            <img src="../capturas/Servidor web/15.png">
+            <h3>SSL</h3>
+            <p>Para activarlo vamos a /etc/apache2/mod-available y utlizamos
+                el comando "a2enmod ssl y reiniciamos apache, aqui vemos que esta 
+                activo porque el puerto 443 esta en el equipo anfitrion abierto"
+            </p>
+            <img src="../capturas/Servidor web/16.png">
+            <p>Creamos el certificado para que podamos entrar en la web, creamos
+                la carpeta ssl dentro de apache2 y ejecutamos "openssl genrsa -out virtualrobles.lan.key 4096"
+                y tras eso creamos el certificado csr con "openssl req -new -key virtualrobles.lan.key -out virtualrobles.lan.csr"
+            </p>
+            <img src="../capturas/Servidor web/17.png">
+            <p>Por ultimo el certificado crt con "openssl x509 -req -days 365 -in virtualrobles.lan.csr  -signkey virtualrobles.lan.key -out virtualrobles.lan.crt"</p>
+            <img src="../capturas/Servidor web/18.png">
+            <p>Aqui tenemos el certificado crt</p>
+            <img src="../capturas/Servidor web/19.png">
+            <p>Ahora configuramos el archivo /etc/apache2/sites-available/default-ssl.conf
+                y cambiamos los valores de "ServerAdmin, DocumentRoot, SSLCertificateFil,
+                SSLCertificateKeyFile, tambien debemos añadir ServerName.
+                 Despues activamos el sitio ssl con a2ensite y reiniciamos apache"
+            </p>
+            <img src="../capturas/Servidor web/19.5.png">
+            <p>Aqui vemos que al entrar en mi segundo virtualhost nos dice que la
+                conexion no es segura, debemos darle a advanced y continuar y podremos
+                entrar en la web.
+            </p>
+            <img src="../capturas/Servidor web/20.png">
+            <h3>Squid</h3>
+            <p>Instalamos squid como cualquier otro programa en linux usando apt
+                y quitamos todo lo innecesario del archivo de configuración
+            </p>
+            <img src="../capturas/Servidor web/21.png">
+            <p>Asi quedaria el archivo de configuracion de squid, debemos añadirle las siguientes lineas al fichero
+                para que funcione con nuestra red y bloquee archivos pdf.
+                acl mired src 172.17.0.0/16
+                acl documentos urlpath_regex \.pdf(\?.*)?$ \.PDF(\?.*)?$
+                http_access deny documentos
+                http_access allow mired</p>
+            <img src="../capturas/Servidor web/22.png">
+            <p>Aqui estoy cambiando la configuracion del proxy de firefox
+                para que use el squid que tengo que docker, podre navegar
+                por internet pero se guardara los sitios a los que entre
+                y no podre descargar pdf que no esten en https.
+            </p>
+            <img src="../capturas/Servidor web/23.png">
+            <p>Aqui vemos que funciona</p>
+            <img src="../capturas/Servidor web/24.png">
+            <p>Aqui se ve que no podemos descargar archivos PDF</p>
+            <img src="../capturas/Servidor web/25.png">
+            <h3>Dansguardian</h3>
+            <p>Instalamos dansguardian y lo unico que tenemos que hacer el comentar la linea
+                de unconfigured en el archivo de configuracion /etc/dansguardian (no pongo captura
+                porque se me olvido echarla de este archivo).
+                Aqui entro en el archivo bannedsitelist y añado youtube como sitio que banear.
+                Iniciamos dansguardian y pasamos al explorador.
+            </p>
+            <img src="../capturas/Servidor web/26.png">
+            <p>Cambio el puerto por el de dansguardian</p>
+            <img src="../capturas/Servidor web/28.png">
+            <p>Y aqui vemos que me bloquea la pagina de youtube</p>
+            <img src="../capturas/Servidor web/27.png">
+          </article>
+        </div>
+      </div>
+    </div>
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+  </body>
+</html>
